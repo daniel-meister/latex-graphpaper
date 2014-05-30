@@ -1,0 +1,55 @@
+%%% examples for the GraphPaper package
+%% Copyright (c) 2014, Daniel Meister <daniel@meisch.ch>
+% to compile make sure the graphpaper.sty is correctly installed
+% in you TeX distribution or in the same folder as this input file
+
+
+\documentclass[11pt,a4paper,fleqn]{scrartcl}
+
+\usepackage[a4paper,left=15mm,right=15mm,top=5mm,bottom=10mm,includehead,includefoot]{geometry}
+
+\usepackage[utf8]{inputenc}
+\usepackage{hyperref}
+\usepackage{blindtext}
+\usepackage{amsmath}
+
+% include package and give box size as parameter
+% currently only 4mm,5mm,6mm are supported
+\usepackage[4mm]{graphpaper}
+
+\title{GraphPaper Examples}
+\author{Daniel Meister $\langle$\href{mailto:daniel@meisch.ch}{daniel@meisch.ch}$\rangle$}
+
+\begin{document}
+\maketitle
+\centering
+
+% default use: set width and height in number of boxes
+\begin{graphpaper}{40}{10}
+  Pythagorean theorem: \boldmath $a^2 + b^2 = c^2$\unboldmath\\[1\baselineskip]
+  binomial coefficient: $\left(\begin{array}{c} n \\ k\end{array}\right) = \displaystyle\frac{n!}{k!\cdot\left(n-k\right)!}$
+\end{graphpaper}
+
+% gpconvert can be used to give lenghts in other units
+\begin{graphpaper}{\gpconvert{13cm}}{\gpconvert{5cm}}
+  \textbf{1.} $2 + 3 \cdot 5 = $\\
+  \textbf{2.} $15 + 2 \cdot 7 = $
+  \begin{align*}
+  \text{\bf 1.} & & 2 + 3 \cdot 5 & = &&&&&\\
+  \text{\bf 2.} & & 15 + 2 \cdot 7 & = &&&&&
+  \end{align*}
+  Complete all the above lines with the correct solution. Also indicate in what order you've evaluated the expressions.
+\end{graphpaper}
+
+% \gpconvert can also be used to scale to textwidth
+% the height can be chosen automatically (integer number of boxes)
+\begin{graphpaper}{\gpconvert{\textwidth}}{auto}
+  A list of items:
+  \begin{itemize}
+  \item Item 1
+  \item Item 2
+  \end{itemize}
+  \blindtext
+\end{graphpaper}
+
+\end{document}

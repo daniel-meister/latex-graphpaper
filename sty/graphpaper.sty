@@ -1,0 +1,135 @@
+%%% the GraphPaper package
+%% Copyright (c) 2014, Daniel Meister <daniel@meisch.ch>
+% this package provides an easy-to-use environment to create graph paper
+% boxes within you LaTeX document based on tikz/PGF
+
+
+\NeedsTeXFormat{LaTeX2e}[1994/06/01]
+\ProvidesPackage{graphpaper}[2014/05/29 GraphPaper]
+
+\RequirePackage{tikz}
+\RequirePackage{environ}
+\RequirePackage{ifthen}
+
+% box size in mm
+\newcommand{\@gpboxsize}{}
+% inverse box size in pt^{-1}
+\newcommand{\@gpinvboxsize}{}
+
+\newcommand*{\@gpgetlength}[1]{\strip@pt\dimexpr\@gpinvboxsize\dimexpr#1\relax\relax}
+
+\newcommand*{\@gpsetupboxsize}[1]{
+  \renewcommand{\@gpboxsize}{#1}
+  \@gpgetconversionfactor{\@gpboxsize}
+  \renewcommand{\@gpinvboxsize}{\gpconversionfactor}
+}
+
+\newcommand*{\@gpgetconversionfactor}[1]{
+  \pgfmathparse{0.35146/#1}
+  \pgfmathsetmacro\gpconversionfactor{\pgfmathresult}
+}
+
+
+\newsavebox{\box@content}
+
+\DeclareOption{4mm}{
+   \@gpsetupboxsize{4}
+}
+\DeclareOption{5mm}{
+   \@gpsetupboxsize{5}
+}
+\DeclareOption{6mm}{
+   \@gpsetupboxsize{6}
+}
+
+\ExecuteOptions{4mm}
+\ProcessOptions\relax
+
+
+\newcommand*{\gpconvert}[1]{\@gpgetlength{#1}}
+
+\newcommand*{\gpvundonewline}{\vspace{-2\baselineskip}\\}
+\newcommand*{\@gpvundobeginalign}{\vspace{-11pt}}
+\newcommand*{\@gpvundoendalign}{\vspace{-1.5\baselineskip}\\}
+\newcommand*{\@gpvundobeginitemize}{\vspace{-9pt}}
+\newcommand*{\@gpvundoenditemize}{\vspace{-9pt}}
+
+\NewEnviron{graphpaper}[2]{%
+  % calculate width
+  \pgfmathparse{(\@gpboxsize * #1) / 10}
+  \pgfmathsetmacro\@gpwidth{\pgfmathresult}
+  % calculate necessary padding
+  \pgfmathparse{\@gpboxsize / 10}
+  \pgfmathsetmacro\@gppadding{\pgfmathresult}
+  % calculate usable text width and line spacing
+  \pgfmathparse{\@gpwidth - 2 * \@gppadding}
+  \pgfmathsetmacro\@gptextwidth{\pgfmathresult}
+  \pgfmathparse{(\@gpboxsize * 2) / 10}
+  \pgfmathsetmacro\@gpbaselineskip{\pgfmathresult}
+  % prepare content box
+  \begin{lrbox}{\box@content}%
+    \begin{minipage}{\@gptextwidth cm}
+      % set baselineskip to have text every second line
+      \setlength{\baselineskip}{\@gpbaselineskip cm}
+      % reset additional space used in AMS formula environments
+      \setlength{\jot}{0mm}
+      % redefine some environments
+      \expandafter\let\expandafter\old@align@star\csname align*\endcsname
+      \expandafter\let\expandafter\old@endalign@star\csname endalign*\endcsname
+      \renewenvironment{align*}{
+        \@gpvundobeginalign
+        \begingroup
+        \old@align@star
+      }{
+        \old@endalign@star
+        \endgroup
+        \@gpvundoendalign
+      }
+      \let\old@itemize\itemize
+      \let\old@enditemize\enditemize
+      \def\itemize{
+        \@gpvundobeginitemize
+        \begingroup
+        \old@itemize
+        \setlength{\itemsep}{0pt}
+        \setlength{\parskip}{0pt}
+      }
+      \def\enditemize{
+        \old@enditemize\endgroup
+        \@gpvundoenditemize
+      }
+      \rule{0pt}{\baselineskip}\BODY
+    \end{minipage}
+  \end{lrbox}%
+  % resolve 'auto'-height
+  \ifthenelse{\equal{#2}{auto}}{
+    \pgfmathparse{ceil(0.3514*(\strip@pt\ht\box@content + \strip@pt\dp\box@content)/\@gpboxsize) + 1}%
+    \pgfmathsetmacro\@gpheightb{\pgfmathresult}
+  }{
+    \edef\@gpheightb{#2}
+  }
+  % calculate height
+  \pgfmathparse{(\@gpboxsize * \@gpheightb) / 10}
+  \pgfmathsetmacro\@gpheight{\pgfmathresult}  
+  % start drawing
+  \noindent
+  \begin{tikzpicture}[y=-1cm]
+    % draw the grid
+    \draw
+        [semitransparent,step=\@gpboxsize mm, line width=0.2mm, black!40!white]
+        (0,\@gpheight) grid (\@gpwidth,0);
+    % draw the border
+    \draw[line width=0.2mm,black] (0,0) rectangle (\@gpwidth,\@gpheight);
+    % insert the text
+    \begin{scope}[yshift=0.5mm]
+      \node
+          [anchor=north west,text width=\@gptextwidth cm,inner sep=0mm]
+          (h1) at (\@gppadding,0) {
+            \usebox{\box@content}
+          };
+    \end{scope}
+  \end{tikzpicture}
+}
+
+
+\endinput
